@@ -30,7 +30,7 @@ public class MainClass {
 		}
 		System.out.println(
 				"\n\nActivities that have 90% of the monitoring records with duration less than 5 minutes are: \n");
-		MonitoredData.getfilteredActivities(splittedList);
+		MonitoredData.getFilteredActivities(splittedList);
 	}
 
 }

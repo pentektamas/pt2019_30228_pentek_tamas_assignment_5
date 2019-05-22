@@ -147,7 +147,7 @@ public class MonitoredData {
 		totalDuration.stream().sorted().forEach(System.out::println);
 	}
 
-	public static void getfilteredActivities(List<MonitoredData> list) {
+	public static void getFilteredActivities(List<MonitoredData> list) {
 
 		Map<String, Integer> map = MonitoredData.countActivities(list);
 		List<Integer> filteredValues = map.values().stream().map(x -> Math.round((x * 90f / 100)))
