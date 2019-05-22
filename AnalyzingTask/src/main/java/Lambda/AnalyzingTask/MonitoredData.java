@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,43 +49,38 @@ public class MonitoredData {
 	}
 
 	public static int countDays(List<MonitoredData> list) {
-
-		LocalDate start = LocalDate.parse(list.get(0).getStartTime().substring(0, 10));
-		LocalDate end = LocalDate.parse(list.get(list.size() - 1).getEndTime().substring(0, 10));
-		Period days = Period.between(start, end);
-		return days.getDays() + 1;
+		long days = list.stream().map(x -> x.getStartTime().substring(0, 10)).distinct().count();
+		return (int) days;
 	}
 
 	public static Map<String, Integer> countActivities(List<MonitoredData> list) {
 
 		Map<String, Integer> map = new TreeMap<String, Integer>();
 		List<String> activities = list.stream().map(m -> m.getActivity()).distinct().collect(Collectors.toList());
-		long[] count = new long[activities.size()];
-		int i = 0;
-		for (i = 0; i < activities.size(); i++) {
+		for (int i = 0; i < activities.size(); i++) {
 			int j = i;
-			count[i] = list.stream().filter(x -> x.activity.equals(activities.get(j))).count();
-			map.put(activities.get(i), (int) count[i]);
+			long count = list.stream().filter(x -> x.activity.equals(activities.get(j))).count();
+			map.put(activities.get(i), (int) count);
 		}
 		return map;
 	}
 
 	public static void countActivitiesEachDay(List<MonitoredData> list) {
 		List<String> activities = list.stream().map(m -> m.getActivity()).distinct().collect(Collectors.toList());
-		LocalDate day = LocalDate.parse(list.get(0).getStartTime().substring(0, 10));
+		LocalDate day = LocalDate.parse(list.stream().findFirst().get().getStartTime().substring(0, 10));
 		day = day.minusDays(1);
 		Map<String, Integer> activitiesPerDay = new TreeMap<String, Integer>();
 		long[] count = new long[activities.size()];
 		for (int k = 0; k < MonitoredData.countDays(list); k++) {
-			int i = 0;
 			day = day.plusDays(1);
 			LocalDate currentDay = day;
 			activitiesPerDay.clear();
-			for (i = 0; i < activities.size(); i++) {
+			for (int i = 0; i < activities.size(); i++) {
 				int j = i;
 				count[i] = list.stream().filter(x -> x.startTime.substring(0, 10).equals(currentDay.toString())
 						&& x.activity.equals(activities.get(j))).count();
-				activitiesPerDay.put(activities.get(i), (int) count[i]);
+				if (count[i] != 0)
+					activitiesPerDay.put(activities.get(i), (int) count[i]);
 			}
 			System.out.println("DAY " + (k + 1) + " :");
 			activitiesPerDay.entrySet().stream().forEach(System.out::println);
