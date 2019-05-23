@@ -91,24 +91,15 @@ public class MonitoredData {
 	public static List<String> getDuration(List<MonitoredData> list) throws ParseException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		List<String> duration = new ArrayList<String>();
-
-		for (MonitoredData m : list) {
-			LocalDateTime now = LocalDateTime.parse(m.getStartTime(), formatter);
-			LocalDateTime then = LocalDateTime.parse(m.getEndTime(), formatter);
-			long sec = ChronoUnit.SECONDS.between(now, then);
-			long hr = sec / 3600;
-			long min = (sec - hr * 3600) / 60;
-			long s = (sec - min * 60 - hr * 3600);
-			String temp;
-			if (m.getActivity().length() < 8)
-				temp = "\t\t\t";
-			else
-				temp = "\t\t";
-			String date = hr + ":" + min + ":" + s;
-			String full = m.getStartTime() + "\t\t" + m.getEndTime() + "\t\t" + m.getActivity() + temp + "Duration: "
-					+ date;
-			duration.add(full);
-		}
+		Function<MonitoredData, String> asd = y -> {
+			long sec = ChronoUnit.SECONDS.between(LocalDateTime.parse(y.getStartTime(), formatter),
+					LocalDateTime.parse(y.getEndTime(), formatter));
+			return ((y.getActivity().length() < 8) ? "\t\t\t" : "\t\t") + "Duration: " + sec / 3600 + ":"
+					+ (sec - (sec / 3600) * 3600) / 60 + ":"
+					+ (sec - ((sec - (sec / 3600) * 3600) / 60) * 60 - (sec / 3600) * 3600);
+		};
+		list.stream().forEach(x -> System.out
+				.println(x.getStartTime() + "\t\t" + x.endTime + "\t\t" + x.getActivity() + "\t" + asd.apply(x)));
 		duration.stream().forEach(System.out::println);
 		return duration;
 	}
@@ -118,17 +109,13 @@ public class MonitoredData {
 		List<Integer> duration = new ArrayList<Integer>();
 		List<String> activities = list.stream().map(m -> m.getActivity()).distinct().collect(Collectors.toList());
 		List<String> totalDuration = new ArrayList<String>();
-		long sec = 0;
 		for (int k = 0; k < activities.size(); k++) {
-			for (MonitoredData m : list) {
-				if (m.getActivity().equals(activities.get(k))) {
-					LocalDateTime now = LocalDateTime.parse(m.getStartTime(), formatter);
-					LocalDateTime then = LocalDateTime.parse(m.getEndTime(), formatter);
-					sec = sec + ChronoUnit.SECONDS.between(now, then);
-				}
-			}
-			duration.add((int) sec);
-			sec = 0;
+			Function<MonitoredData, Long> func = x -> ChronoUnit.SECONDS.between(
+					LocalDateTime.parse(x.getStartTime(), formatter), LocalDateTime.parse(x.getEndTime(), formatter));
+			int m = k;
+			long seconds = list.stream().filter(x -> x.getActivity().equals(activities.get(m)))
+					.collect(Collectors.summingLong(z -> func.apply(z)));
+			duration.add((int) seconds);
 		}
 		int j = 0;
 		for (Integer integer : duration) {
